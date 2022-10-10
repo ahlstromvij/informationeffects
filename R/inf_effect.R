@@ -1,0 +1,237 @@
+#' Construct a knowledge scale using IRT modeling.
+#'
+#' \code{info_scale} calculates a knowledge scale using Item Response Theory (IRT) modeling
+#' on the basis of a set of binary knowledge items. The function uses the \code{mirt} package
+#' for IRT modeling.
+#'
+#' @param items A concatenated character string of names of the knowledge items.
+#' @param data A data frame containing the knowledge items.
+#' @param binary_cutoff Percentile value for binary knowledge scale, with respondents
+#'     at or above that value coded as \code{1} and otherwise as \code{0}. Set to 90th
+#'     percentile by default.
+#' @return \code{inf_scale} returns a list of the following:
+#'     \itemize{
+#'       \item \code{model} The IRT model
+#'       \item \code{model_summary} A summary of the IRT model
+#'       \item \code{model_coef} The coefficients for the IRT model
+#'       \item \code{know_scores} A vector of knowledge scores
+#'       \item \code{know_scores_binary} A vector of binary knowledge scores
+#'       \item \code{know_scores_binary_tbl} A table with the proportions on the binary knowledge variable
+#'       \item \code{par_analysis} The plot for a paralell analysis of the knowledge items, to evaluate dimensionality.
+#'       \item \code{q3} The Q3 values for the IRT model, to investigate local independence
+#'       \item \code{empirical_plots} Empirical plots for the IRT model, to evaluate model fit
+#'    }
+#' @details Further diagnostics can be accessed through the \code{model} object returned by the function:
+#' \code{plot(model, type = "trace")} gives the trace plot and \code{plot(model, type = "info")} gives the
+#' information plot.
+#' @examples # NOTE: This won't work without data
+#' info_scale(items = c("k1","k2","k3","k4"),
+#'            data = df)
+info_scale <- function(items, data, binary_cutoff = 0.9) {
+  # save all knowledge items to a data frame
+  items_df <- data.frame(matrix(NA, nrow = dim(data)[1], ncol = length(items)))
+  for (i in 1:length(items)) {
+    items_df[,i] <- data[[items[i]]]
+  }
+
+  # fit irt model
+  irt_mod <- mirt::mirt(data=items_df,
+                  model=1,
+                  itemtype = "2PL",
+                  verbose=FALSE)
+
+  # save knowledge scores
+  know_scores <- fscores(irt_mod)[,1]
+
+  # create binary knowledge variable
+  knowledge_threshold <- quantile(know_scores, binary_cutoff)
+  know_scores_binary <- ifelse(know_scores >= knowledge_threshold, 1, 0)
+  know_scores_binary_tbl <- prop.table(table("Proportion of observations in each category:" = know_scores_binary))
+
+  # save empirical plots to list
+  plot_list_empirical <- vector('list', length(items))
+  for (i in 1:length(items)) {
+    plot_list_empirical[[i]] <- local({
+      i <- i
+      print(itemfit(irt_mod, empirical.plot = i))
+    })
+  }
+  empirical_plots <- ggpubr::ggarrange(plotlist = plot_list_empirical)
+
+  # scree plot
+  psych::fa.parallel(items_df, fa="fa")
+
+  return(list("model" = irt_mod,
+              "model_coef" = coef(irt_mod, IRTpars=T),
+              "model_summary" = summary(irt_mod),
+              "know_scores" = know_scores,
+              "know_scores_binary" = know_scores_binary,
+              "know_scores_binary_tbl" = know_scores_binary_tbl,
+              "empirical_plots" = empirical_plots,
+              "par_analysis" = recordPlot(),
+              "q3" = data.frame(residuals(irt_mod, type="Q3"))))
+}
+
+#' Evaluate construct validity using marginal means.
+#'
+#' \code{info_emmeans} estimates marginal mean levels of knowledge using the \code{emmeans} package for different demographic
+#' variables in order to evaluate construct validity for the underlying knowledge scale.
+#'
+#' @param knolwedge_var A character string representing a knowledge variable.
+#' @param covariates A concatenated character string of covariates across which marginal means will be estimated.
+#' @param data A data frame containing aforementioned variables.
+#' @return \code{info_emmeans} returns a list of marginal means for the covariates in question.
+#' @details For a plausible knowledge scale, we would expect to see a positive relationship between knowledge and education and
+#' income, and for men to know more than women.
+#' @seealso See \code{\link{info_scale}} for how to construct a knowledge scale.
+#' @examples # NOTE: This won't work without sample data
+#' info_emmeans(knowledge_var = "knowledge",
+#'             covariates = c("income", "education"),
+#'             data = df)
+info_emmeans <- function(knowledge_var, covariates, data) {
+  # construct formula
+  f <- as.formula(
+    paste(knowledge_var,
+          paste(covariates, collapse = " + "),
+          sep = " ~ "))
+
+  # fit model
+  m <- lm(f,
+          data = data)
+
+  # create list of emmeans by each covariate
+  emmeans_list <- list()
+  for (i in 1:length(covariates)) {
+    emmeans_list[[i]] <- emmeans::emmeans(m, specs = covariates[i])
+  }
+
+  return(emmeans_list)
+}
+
+#' Calculate propensity scores for counterfactual modeling.
+#'
+#' \code{info_prop_scores} calculates propensity scores to be used as weights in subsequent, counterfactual modeling,
+#' in order to improve balance. The function uses logistic regression to calculate the scores. It is recommended that
+#' the calculated scores are independently evaluated, e.g., using the balance plots in \code{cobalt::bal.plot}.
+#'
+#' @param knowledge_var A character string representing a binary knowledge variable.
+#' @param covariates A concatenated character string of covariates that can be expected to have an effect on knowledge.
+#' @param data A data frame containing aforementioned variables.
+#' @return \code{info_prop_scores} returns a vector of propensity scores.
+#' @details The function calculates the probability of an observation being found in the 'informed' category, represented by 1 on the
+#' binary knowledge variable, as a function of a set of covariates. Call that probability \code{p}. The scores are then calculated as
+#' the inverse of that probability, e.g., \code{1/p}, for anyone in the 'informed' category, and \code{1/(1-p)} otherwise.
+#' @seealso See \code{\link{info_scale}} for how to construct a knowledge scale.
+#' @examples # NOTE: This won't work without sample data
+#' info_prop_scores(knowledge_var = "knowledge_binary",
+#'                  covariates = c("age","gender","education","income"),
+#'                  data = df)
+info_prop_scores <- function(knowledge_var, covariates, data) {
+  # construct formula
+  f <- as.formula(
+    paste(knowledge_var,
+          paste(covariates, collapse = " + "),
+          sep = " ~ "))
+
+  # calculate propensity scores
+  p_scores <- glm(f,
+                  data = data,
+                  family = "binomial")
+  data$ps_value <- predict(p_scores, type="response")
+
+  # return propensity scores
+  return(ifelse(data[[knowledge_var]] == 1, 1/data$ps_value, 1/(1-data$ps_value)))
+}
+
+#' Calculate information effects.
+#'
+#' \code{info_effect} calculates information effects on the basis of survey data with a binary knowledge
+#' variable, propensity scores, and survey weights, while controlling for a set of covariates. It can
+#' also generate bootstrapped confidence intervals.
+#'
+#' @param outcome A character string representing the outcome variable that you are looking to estimate an effect on.
+#' @param knowledge_var A character string representing a binary knowledge variable.
+#' @param covariates A concatenated character string of covariates.
+#' @param prop_weight A character string representing a vector containing propensity scores
+#' @param survey_weight A character string representing a vector containing survey weights.
+#' @param boot_ci logical, designates whether to calculate bootstrapped confidence intervals.
+#' @param data A data frame containing aforementioned variables.
+#' @return \code{info_effect} returns a list of the following:
+#'     \itemize{
+#'       \item \code{model} The model used to estimate the information effect
+#'       \item \code{actual_proportion} The actual, survey weighted proportion on the \code{outcome} variable
+#'       \item \code{informed_proportion} The informed, survey weighted proportion on the \code{outcome} variable
+#'       \item \code{difference} The difference between \code{actual_proportion} and the \code{informed_proportion}, i.e., the
+#'       information effect.
+#'       \item \code{actual_upr}, \code{actual_lwr}, \code{informed_upr}, \code{informed_lwr} The upper and lower bounds of the
+#'       bootstrapped confidence intervals on \code{actual_proportion} and \code{informed_proportion}.
+#'    }
+#' @seealso See \code{\link{info_scale}} for how to construct a knowledge scale, \code{\link{info_emmeans}} for evaluating construct
+#' validity for such a scale, and \code{\link{info_prop_scores}} for calculating propensity scores.
+#' @examples # NOTE: This won't work without sample data
+#' info_effect(outcome = "immigration",
+#'     knowledge_var = "knowledge_binary",
+#'     covariates = c("age",
+#'                    "gender",
+#'                    "education",
+#'                    "income",
+#'                    "religion",
+#'                    "ethnicity"),
+#'     prop_weight = "prop_score",
+#'     survey_weight = "survey_wt",
+#'     data = df,
+#'     boot_ci = T)
+info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_weight, boot_ci = F, data) {
+  # construct formula
+  f <- as.formula(
+    paste(outcome,
+          paste(knowledge_var,
+                paste(covariates, collapse = " + "), sep = " + "),
+          sep = " ~ "))
+
+  # fit model
+  m <- glm(f,
+           data = data,
+           family = "binomial",
+           weights = df[[prop_weight]])
+
+  # update formula
+  m$call <- call('glm', formula = formula(f), data = substitute(data))
+
+  # make everyone in the data set informed
+  data[[knowledge_var]] <- 1
+
+  # calculate actual and informed support
+  actual <- weighted.mean(data[[outcome]], data[[survey_weight]])
+  informed_outcome <- predict(m, newdata = data, type = "response")
+  informed <- weighted.mean(informed_outcome, data[[survey_weight]])
+
+  # generate bootstrap confidence intervals
+  if (boot_ci == T) {
+    meanfun <- function(data, indices) {
+      d <- data[indices]
+      return(mean(d))
+    }
+    mean_wt <- mean(df[[survey_weight]])
+    boot_actual <- boot::boot(data[[outcome]] * data[[survey_weight]], meanfun, R=1000)
+    boot_informed <- boot::boot(informed_outcome * data[[survey_weight]], meanfun, R=1000)
+    actual_lwr <- boot::boot.ci(boot_actual, conf = 0.95, type = "basic")$basic[4]/mean_wt
+    actual_upr <- boot::boot.ci(boot_actual, conf = 0.95, type = "basic")$basic[5]/mean_wt
+    informed_lwr <- boot::boot.ci(boot_informed, conf = 0.95, type = "basic")$basic[4]/mean_wt
+    informed_upr <- boot::boot.ci(boot_informed, conf = 0.95, type = "basic")$basic[5]/mean_wt
+    return(list("model" = m,
+                "actual_proportion" = actual,
+                "actual_upr" = actual_upr,
+                "actual_lwr" = actual_lwr,
+                "informed_proportion" = informed,
+                "informed_upr" = informed_upr,
+                "informed_lwr" = informed_lwr,
+                "difference" = informed - actual))
+  }
+  else {
+    return(list("model" = m,
+                "actual_proportion" = actual,
+                "informed_proportion" = informed,
+                "difference" = informed - actual))
+  }
+}

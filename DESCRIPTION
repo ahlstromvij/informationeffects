@@ -1,0 +1,26 @@
+Package: informationeffects
+Type: Package
+Title: A complete pipeline for calculating information effects
+Version: 0.1.0
+Author: Kristoffer Ahlstrom-Vij
+Maintainer: Kristoffer Ahlstrom-Vij <ahlstromvij@gmail.com>
+Description: A complete pipeline for calculating information effects.
+    It includes functions for constructing a knowledge scale from a set
+    of knowledge items using IRT modeling; evaluating construct validity
+    using estimated marginal means; calculating propensity scores
+    for counterfactual modeling; and calculating information effects in 
+    survey data using propensity scores and survey weights.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    boot,
+    mirt,
+    ggpubr,
+    emmeans,
+    cobalt,
+    gridExtra
+RoxygenNote: 7.2.1
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
