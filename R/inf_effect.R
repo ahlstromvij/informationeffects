@@ -41,7 +41,7 @@ info_scale <- function(items, data, binary_cutoff = 0.9) {
                   verbose=FALSE)
 
   # save knowledge scores
-  know_scores <- fscores(irt_mod)[,1]
+  know_scores <- mirt::fscores(irt_mod)[,1]
 
   # create binary knowledge variable
   knowledge_threshold <- quantile(know_scores, binary_cutoff)
@@ -53,7 +53,7 @@ info_scale <- function(items, data, binary_cutoff = 0.9) {
   for (i in 1:length(items)) {
     plot_list_empirical[[i]] <- local({
       i <- i
-      print(itemfit(irt_mod, empirical.plot = i))
+      print(mirt::itemfit(irt_mod, empirical.plot = i))
     })
   }
   empirical_plots <- ggpubr::ggarrange(plotlist = plot_list_empirical)
@@ -62,14 +62,14 @@ info_scale <- function(items, data, binary_cutoff = 0.9) {
   psych::fa.parallel(items_df, fa="fa")
 
   return(list("model" = irt_mod,
-              "model_coef" = coef(irt_mod, IRTpars=T),
+              "model_coef" = mirt::coef(irt_mod, IRTpars=T),
               "model_summary" = summary(irt_mod),
               "know_scores" = know_scores,
               "know_scores_binary" = know_scores_binary,
               "know_scores_binary_tbl" = know_scores_binary_tbl,
               "empirical_plots" = empirical_plots,
               "par_analysis" = recordPlot(),
-              "q3" = data.frame(residuals(irt_mod, type="Q3"))))
+              "q3" = data.frame(mirt::residuals(irt_mod, type="Q3"))))
 }
 
 #' Evaluate construct validity using marginal means.
