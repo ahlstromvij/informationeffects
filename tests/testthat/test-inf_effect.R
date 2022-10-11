@@ -26,3 +26,41 @@ test_that("Marginal means are calculated correctly", {
   expect_equal(summary(temp_means[[2]])$emmean, correct_vals_income, tolerance = 1e-5)
 })
 
+test_that("Propensity scores are calculated correctly", {
+  set.seed(1)
+  knowledge_binary <- sample(c(1,0), replace=TRUE, size=100)
+  education <- sample(c("none","gcse","alevel","university"), replace=TRUE, size=100)
+  income <- sample(c("Q1","Q2","Q3","Q4"), replace=TRUE, size=100)
+  temp_df <- data.frame(knowledge_binary, education, income)
+  prop_scores <- info_prop_scores(knowledge_var = "knowledge_binary",
+                                  covariates = c("education","income"),
+                                  data = temp_df)
+  expect_equal(prop_scores[1], 2.397574, tolerance = 1e-5)
+})
+
+test_that("Information effects are calculated correctly", {
+  set.seed(1)
+  outcome_var <- sample(c(1,0), replace=TRUE, size=100)
+  knowledge_binary <- sample(c(1,0), replace=TRUE, size=100)
+  education <- sample(c("none","gcse","alevel","university"), replace=TRUE, size=100)
+  income <- sample(c("Q1","Q2","Q3","Q4"), replace=TRUE, size=100)
+  prop_scores <- abs(rnorm(100,0,1))
+  survey_wt <- abs(rnorm(100,0,1))
+  temp_df <- data.frame(outcome_var, knowledge_binary, education, income, prop_scores, survey_wt)
+  eff <- info_effect(outcome = "outcome_var",
+                     knowledge_var = "knowledge_binary",
+                     covariates = c("education",
+                                    "income"),
+                     prop_weight = "prop_scores",
+                     survey_weight = "survey_wt",
+                     data = temp_df,
+                     boot_ci = T)
+  expect_equal(eff$actual_proportion, 0.5089763, tolerance = 1e-5)
+  expect_equal(eff$actual_upr, 0.6577867, tolerance = 1e-5)
+  expect_equal(eff$actual_lwr, 0.3531776, tolerance = 1e-5)
+  expect_equal(eff$informed_proportion, 0.4903569, tolerance = 1e-5)
+  expect_equal(eff$informed_upr, 0.5658839, tolerance = 1e-5)
+  expect_equal(eff$informed_lwr, 0.412398, tolerance = 1e-5)
+  expect_equal(eff$difference, -0.01861934, tolerance = 1e-5)
+})
+
