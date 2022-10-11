@@ -193,7 +193,7 @@ info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_
   m <- glm(f,
            data = data,
            family = "binomial",
-           weights = df[[prop_weight]])
+           weights = data[[prop_weight]])
 
   # update formula
   m$call <- call('glm', formula = formula(f), data = substitute(data))
@@ -212,7 +212,7 @@ info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_
       d <- data[indices]
       return(mean(d))
     }
-    mean_wt <- mean(df[[survey_weight]])
+    mean_wt <- mean(data[[survey_weight]])
     boot_actual <- boot::boot(data[[outcome]] * data[[survey_weight]], meanfun, R=1000)
     boot_informed <- boot::boot(informed_outcome * data[[survey_weight]], meanfun, R=1000)
     actual_lwr <- boot::boot.ci(boot_actual, conf = 0.95, type = "basic")$basic[4]/mean_wt
