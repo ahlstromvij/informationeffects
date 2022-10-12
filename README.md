@@ -2,9 +2,9 @@
 
 ## Background
 
-In politics like elsewhere, what we know matters for what we want. That’s why political scientists, rightly, are concerned with studying what voters know, and what difference it would make had they known more. Some of this work is experimental. However, for no other reason than resource constraint, a lot of political scientific work on political knowledge utilities observational data, generally investigating so-called information effects, i.e., differences between actual (reported) preferences, and the preferences people likely would have reported, had they been more politically informed.
+In politics like elsewhere, what we know matters for what we want. That’s why political scientists, rightly, are concerned with studying what voters know, and what difference it would make had they known more. Some of this work is experimental. However, for no other reason than resource constraint, a lot of political scientific work on political knowledge uses observational data, generally investigating so-called _information effects_, i.e., differences between actual (reported) preferences, and the preferences people likely would have reported, had they been more politically informed.
 
-The information effects literature makes clear that knowledge does matter for politics, and can in some cases even change the electoral outcome. For example: 
+The information effects literature makes clear that knowledge can in some cases make a substantial difference, and even change the electoral outcome. Examples include: 
 
 - [Ahlstrom-Vij (2020)](https://www.cambridge.org/core/journals/episteme/article/abs/case-for-modelled-democracy/B57E0E9B282C8E16FC28664F939E8C80) models an informed EU referendum in the UK, and sees the proportion of remain swing from a minority to a majority. 
 - [Blais et al. (2009)](https://ejpr.onlinelibrary.wiley.com/doi/abs/10.1111/j.1475-6765.2008.00835.x) simulate the outcome of six past Canadian elections, involving three to four parties, with fully informed voters, and see a likely difference in outcome in one. 
@@ -30,4 +30,4 @@ The package currently only exists in a development version, which can be install
 devtools::install_github("ahlstromvij/informationeffects")
 ```
 
-Please report any bugs or issues at https://github.com/ahlstromvij/informationeffects/issues.
+Please report any bugs or issues [here](https://github.com/ahlstromvij/informationeffects/issues).
