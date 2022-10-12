@@ -1,0 +1,190 @@
+---
+title: "Modeling information effects in R with the informationeffects package"
+author: Kristoffer Ahlstrom-Vij
+output: rmarkdown::html_vignette
+bibliography: refs.bib
+vignette: >
+  %\VignetteIndexEntry{Modeling information effects in R with the informationeffects package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(tidyverse)
+df <- read_csv("bes_data_W17.csv")
+df <- df %>% 
+  select(gender, education, income, religion, ethnicity, age, party_id, euRefVote,
+         k1, k2, k3, k4,
+         immigSelf,
+         survey_wt) %>% 
+  rename(eu_ref_vote = euRefVote,
+         immig_self = immigSelf) %>% 
+  mutate(immig_self = case_when(immig_self < 5 ~ 1, TRUE ~ 0),
+         age = recode(age,
+                      `2` = "18-25",
+                      `3` = "26-35",
+                      `4` = "36-45",
+                      `5` = "46-55",
+                      `6` = "56-65",
+                      `7` = "over65"),
+         gender = recode(gender,
+                         `1` = "male",
+                         `2` = "female"),
+         income = recode(income,
+                         `1` = "Q1",
+                         `2` = "Q1",
+                         `3` = "Q1",
+                         `4` = "Q1",
+                         `5` = "Q2",
+                         `6` = "Q2",
+                         `7` = "Q3",
+                         `8` = "Q3",
+                         `9` = "Q4",
+                         `10` = "Q4",
+                         `11` = "Q4",
+                         `12` = "Q5",
+                         `13` = "Q5",
+                         `14` = "Q5",
+                         `15` = "Q5",
+                         `16` = "Q5",
+                         `17` = "Q5"))
+```
+
+## Why information matters in politics
+
+In politics like elsewhere, what we know matters for what we want. Lucy wants harsh sentencing because she believes it will reduce crime rates. Were she to find out that it does not, she wouldn’t want harsh sentencing anymore. Bob wants less immigration because he believes that it hurts the economy. Were he to learn that immigration tends to have a positive, economic impact he would no longer want to see it reduced.
+
+That's why political scientists, rightly, are concerned with studying what voters know, and what difference it would make had they known  more. The former question has been extensively investigated in the literature on public ignorance -- as it turns out, most of us know very little when it comes to politically relevant matters [@achenbartels2016; @carpinikeeter1996]. The latter (what difference knowledge makes in politics) has been studied in the literature under the heading of 'information effects' [@althaus2003; @bartels1996].
+
+The information effects literature makes clear that knowledge does matter for politics, and can in some cases even change the electoral outcome. For example, @ahlstromvij2020-moddemo models an informed EU referendum in the UK, and sees the proportion of remain swing from a minority to a majority. @blaisetal2009 simulate the outcome of six past Canadian elections, involving three to four parties, with fully informed voters, and see a likely difference in outcome in one. @oscarsson2007 simulates six past Swedish elections, involving eight main parties, and sees a likely difference in outcome in two of them. 
+
+Information effects modeling can also be used to look at the influence of knowledge on political opinion over time. For example, @ahlstromvij-posttruth uses ANES data to evaluate the idea that we have entered a "post-truth era", by we arguing that, if we have, we should expect to see decreasing information effects on central political issues over time. This turns out to be the case: Ahlstrom-Vij shows that, at least in a US context, we see a decrease in information effects on party preferences as well as on key, political issues -- immigration, same-sex adoption and gun laws, in particular -- in the period 2004 to 2016, which offers some novel, empirical evidence for the "post-truth" narrative.
+
+Whether explicitly framed in those terms, modeling of information effects involves a form of counterfactual or causal modeling [@morganwinship2015]: a model is fitted, not for purposes of making a straightforward prediction (as in predictive modeling), e.g., concerning how some particular respondent might respond, but in order to estimate how a respondent would have responded, had they been more informed, with reference to some relevant measure of political knowledge [@carpinikeeter1996]. Such an estimation is performed by fitting the model on the relevant data, and then using the model to make a "prediction," once the value on the political knowledge variable for each respondent has been set to whatever value designates being "informed," thereby estimating what each respondent would have responded, had they been fully informed.
+
+## Example data: Immigration attitudes in British Election Studies
+
+How does this work in practice? That's the question this guide is looking to answer. It will walk through each step in a complete pipeline from the constructing a political knowledge scale from a set of items to modeling the relevant effects, using functions written in R [@r_core_team] -- a free, open source language for statistical computing -- that can be re-used by others interested in information effects modeling on their own particular data sets.
+
+The functions and their outputs will be illustrated by way of subset of Wave 17 of the British Election Study Internet Panel [@bes-17] (N = 34,366). As our outcome, we will use the following attitudinal variable (`immigSelf`): "On a scale from 0-10, how would you prefer immigration levels to Britain changed?" (0 = reduced a lot, 5 = kept the same, 10 = increased a lot). For purposes of modeling, this variable has been re-coded as a binary one, with 1 for responses below 5, and 0 otherwise:
+
+```{r immigself}
+df %>% 
+  count(immig_self)
+```
+
+In what follows, we will use these variables to estimate what difference information would make to anti-immigration sentiments. To that end, we'll also use a set of demographic and socioeconomic covariates, as follows:
+
+```{r demographics}
+df %>% 
+  select(education, income, gender, age, religion, ethnicity, party_id, eu_ref_vote)
+```
+
+We will also make use of four knowledge items, coded as 1 for correct, and 0 for incorrect or "Don't know" responses [@zaller1992: 339; @althaus2003: 105]:
+
+- `k1`: "Polling stations close at 10.00pm on election day" (True)
+- `k2`: "No-one may stand for parliament unless they pay a deposit" (True)
+- `k3`: "MPs from different parties are on parliamentary committees" (True)
+- `k4`: "The number of MPs in Parliament is about 100" (False)
+
+If we sum up the number of correct answers, we get the following distribution:
+
+```{r total_score}
+df %>% 
+  mutate(total_score = k1 + k2 + k3 + k4) %>% 
+  count(total_score)
+```
+
+Finally, we will also use the survey weight variable (renamed `survey_wt` in the subset we will be using) included with the data set, in order to have our results be representative of the UK population.
+
+## Constructing a knowledge scale
+
+The first thing we need in order to model information effects is, naturally enough, some measure of participant's level of political knowledge. Following the work of Michael Delli Carpini and Scott Keeter [@carpinikeeter1993; @carpinikeeter1996], this typically takes the form of a number of TRUE / FALSE items, where "Don't know" responses, as already noted, are generally coded as FALSE, i.e., as respondents not knowing the relevant answer [@zaller1992: 339; @althaus2003: 105]. 
+
+One straightforward way to create such a scale is to simply add up all correct answers, for a total knowledge score [@althaus2003]. One downside with doing so is that, outside of getting no questions right and getting all questions wrong, there are more than one ways to get a particular number of responses correct. Since some questions are more difficult than others, and getting those right thereby is more diagnostic of being informed, a purely additive scale thereby risks grouping together people of different abilities.
+
+A better way to construct the relevant scale is therefore to use Item Response Theory (IRT) model. IRT modeling is an established method for modeling underlying, latent traits, such as abilities. Such models are  able to discriminate between the ability of respondents with the same number of correct responses but different response patterns. As we shall see, an IRT model also offers a clear window into the performance both of individual items and the scale as a whole, thereby helping the researcher construct a good knowledge scale.
+
+The latent traits modeled by way of IRT are assumed to fall on a continuous scale. Values on that scale are usually referred to by way of the Greek letter $\theta$ (theta), and taken to range from -$\infty$ to +$\infty$, with a mean of 0 and standard deviation of 1. This means that, while the individual $\theta$ values ascribed to any particular respondent has no intrinsic meaning, it can nevertheless be interpreted relative to an estimated population mean.
+
+To construct a knowledge scale using informationeffects, we do the following:
+
+```{r know_scale_1, message=FALSE, results='hide', fig.show='hide'}
+library(informationeffects)
+know_scale <- info_scale(items = c("k1","k2","k3","k4"),
+                         data = df)
+```
+
+`info_scale` returns a list of elements. To begin with, it uses R's `mirt` package [@chalmers2012] to generate an IRT scale on the basis of a set of knowledge items. The scale values of each response pattern in the data is accessible as `know_scores`:
+
+```{r know_scale_2}
+head(know_scale$know_scores)
+```
+
+Additionally, `info_scale` takes as an optional parameter a percentile cut-off for a corresponding binary knowledge scale, accessible as `binary_cutoff`, and set at 90th percentile by default. The binary values of each response pattern in the data is accessed by way of `know_scores_binary`, alongside a `prop.table` for each category at `know_scores_binary_tbl`:
+
+```{r know_scale_3a}
+head(know_scale$know_scores_binary)
+```
+
+This binary variable will be used later on when calculating so-called propensity scores, for purposes of balancing the data set and break any correlation between the knowledge variable and demographic variables. For such balancing to work, we ideally want to set the bar for being "informed" at a level that's demanding enough to be conceptually plausible, yet not so demanding that very few people quality. This can be evaluated by consulting the proportion of observations that end up in each of the two categories:
+
+```{r know_scale_3b}
+know_scale$know_scores_binary_tbl
+```
+
+As we can see, about 45% of the sample end up in the "informed" category, which suggests that the items in the scale are fairly easy. This should be kept in mind when eventually interpreting any information effect.
+
+`info_scale` also returns the IRT model itself as `model`, alongside a model summary, providing the factor loadings (`F1`), and model coefficients, with `a` corresponding to the discrimination parameter, and `b` to the difficulty parameter:
+
+```{r know_scale_4a}
+know_scale$model_summary
+know_scale$model_coef
+```
+
+We ideally want to see discrimination values greater than 1, which would indicate that the relevant item discriminates well between people of different levels of knowledge. This discrimination value is also reflected in the item probability function below (`trace_plot`), with steeper curves representing greater discrimination:
+
+```{r know_scale_4b, fig.width=7, fig.height=5}
+know_scale$trace_plot
+```
+
+The `b` value designates the difficulty of the item, and represents the point on the ability (i.e., $\theta$) spectrum on which a respondent becomes more than 50% likely to answer that question correctly. The same value can be plotted on the trace plot by drawing a straight line from 0.5 on the y-axis out to the line, and then tracing a vertical line down to $\theta$ value on the x-axis, representing the relevant level of ability.
+
+The test information plot (`info_plot`) shows at what point on the ability spectrum the test offers most information, which we in this case can see is just below a $\theta$ of 0, representing mean ability:
+
+```{r know_scale_4c, fig.width=7, fig.height=5}
+know_scale$info_plot
+```
+
+An IRT scale needs to satisfy three conditions:
+
+1. An IRT scale (of this kind) needs to be unidimensional, i.e., the items involved should tap into a single trait. This can be evaluated using parallel analysis, accessed as `par_analysis`. 
+2. An IRT scale should also exhibit local independence, meaning that, conditional on the latent variable, item responses should be unrelated to one another. This is evaluated using Yen's Q3 [@yen1993], returned by `info_scale` as `q3`.
+3. Model fit can be evaluated visually by inspecting the `empirical_plots` element.
+
+Let's look at each in turn:
+
+```{r know_scale_5, fig.width=7, fig.height=5}
+know_scale$par_analysis
+```
+
+Parallel analysis is related to the traditional scree method, whereby we plot eigenvalues of a principal axis in descending order. These eigenvalues indicate the amount of variance accounted for by each of factors, out of the total variance. In traditional scree plotting, we simply look at where we get a steep drop in the graph, suggesting that bringing in further factors fails to explain much (further) variance. However, in parallel analysis, we compare the scree plot to eigenvalues from principal axis factoring of random correlation matrices of the same size as the data, and look at how many factors have eigenvalues greater than the corresponding average eigenvalues of the random matrices [@andrews2021]. As can be seen in this graph, one factor has such an eigenvalue, suggesting that the unidimensionality assumption is satisfied. 
+
+```{r know_scale_6}
+know_scale$q3
+```
+
+The largest Q3 value is -0.45. @yen1993 suggests a cut-off value of 0.2, but as pointed out by @deayala2009, a Q3 test tends to give inflated negative values for short tests. Indeed, Yen's own suggestion was in the context of scales with at least 17 items. For that reason, a value of -0.45 would seem acceptable, given the short scale.
+
+```{r know_scale_7, fig.width=7, fig.height=7}
+know_scale$empirical_plots
+```
+
+The empirical plots for all items suggest an acceptable fit, with some possible reservations about item 1.
+
+## References
