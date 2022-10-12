@@ -14,6 +14,8 @@
 #'       \item \code{model} The IRT model
 #'       \item \code{model_summary} A summary of the IRT model
 #'       \item \code{model_coef} The coefficients for the IRT model
+#'       \item \code{trace_plot} The item probability function plot for the IRT model
+#'       \item \code{info_plot} The test information plot for the IRT model
 #'       \item \code{know_scores} A vector of knowledge scores
 #'       \item \code{know_scores_binary} A vector of binary knowledge scores
 #'       \item \code{know_scores_binary_tbl} A table with the proportions on the binary knowledge variable
@@ -21,9 +23,6 @@
 #'       \item \code{q3} The Q3 values for the IRT model, to investigate local independence
 #'       \item \code{empirical_plots} Empirical plots for the IRT model, to evaluate model fit
 #'    }
-#' @details Further diagnostics can be accessed through the \code{model} object returned by the function:
-#' \code{plot(model, type = "trace")} gives the trace plot and \code{plot(model, type = "info")} gives the
-#' information plot.
 #' @examples
 #' item1 <- sample(c(0,1), replace=TRUE, size=100)
 #' item2 <- sample(c(0,1), replace=TRUE, size=100)
@@ -63,14 +62,16 @@ info_scale <- function(items, data, binary_cutoff = 0.9) {
   empirical_plots <- ggpubr::ggarrange(plotlist = plot_list_empirical)
 
   # scree plot
-  psych::fa.parallel(items_df, fa="fa")
+  psych::fa.parallel(items_df, fa="fa", show.legend = FALSE)
 
   return(list("model" = irt_mod,
               "model_coef" = mirt::coef(irt_mod, IRTpars=TRUE),
-              "model_summary" = summary(irt_mod),
+              "model_summary" = mirt::summary(irt_mod),
               "know_scores" = know_scores,
               "know_scores_binary" = know_scores_binary,
               "know_scores_binary_tbl" = know_scores_binary_tbl,
+              "trace_plot" = mirt::plot(irt_mod, type="trace"),
+              "info_plot" = mirt::plot(irt_mod, type="info"),
               "empirical_plots" = empirical_plots,
               "par_analysis" = grDevices::recordPlot(),
               "q3" = data.frame(mirt::residuals(irt_mod, type="Q3"))))

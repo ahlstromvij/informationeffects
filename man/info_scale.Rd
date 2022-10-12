@@ -21,6 +21,8 @@ percentile by default.}
       \item \code{model} The IRT model
       \item \code{model_summary} A summary of the IRT model
       \item \code{model_coef} The coefficients for the IRT model
+      \item \code{trace_plot} The item probability function plot for the IRT model
+      \item \code{info_plot} The test information plot for the IRT model
       \item \code{know_scores} A vector of knowledge scores
       \item \code{know_scores_binary} A vector of binary knowledge scores
       \item \code{know_scores_binary_tbl} A table with the proportions on the binary knowledge variable
@@ -33,11 +35,6 @@ percentile by default.}
 \code{info_scale} calculates a knowledge scale using Item Response Theory (IRT) modeling
 on the basis of a set of binary knowledge items. The function uses the \code{mirt} package
 for IRT modeling.
-}
-\details{
-Further diagnostics can be accessed through the \code{model} object returned by the function:
-\code{plot(model, type = "trace")} gives the trace plot and \code{plot(model, type = "info")} gives the
-information plot.
 }
 \examples{
 item1 <- sample(c(0,1), replace=TRUE, size=100)
