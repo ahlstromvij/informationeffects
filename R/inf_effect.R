@@ -196,13 +196,20 @@ info_prop_scores <- function(knowledge_var, covariates, data) {
 #'             survey_weight = "survey_wt",
 #'             data = df,
 #'             boot_ci = T)
-info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_weight, boot_ci = F, data) {
+info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_weight = 1, boot_ci = F, data) {
   # construct formula
   f <- as.formula(
     paste(outcome,
           paste(knowledge_var,
                 paste(covariates, collapse = " + "), sep = " + "),
           sep = " ~ "))
+
+  # check for survey_weight
+  if (survey_weight == 1) {
+    survey_wt_vector <- rep(1, length(data[[outcome]]))
+  } else {
+    survey_wt_vector <- data[[survey_weight]]
+  }
 
   # fit model
   m <- glm(f,
@@ -217,9 +224,9 @@ info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_
   data[[knowledge_var]] <- 1
 
   # calculate actual and informed support
-  actual <- weighted.mean(data[[outcome]], data[[survey_weight]])
+  actual <- weighted.mean(data[[outcome]], survey_wt_vector)
   informed_outcome <- predict(m, newdata = data, type = "response")
-  informed <- weighted.mean(informed_outcome, data[[survey_weight]])
+  informed <- weighted.mean(informed_outcome, survey_wt_vector)
 
   # generate bootstrap confidence intervals
   if (boot_ci == T) {
@@ -227,9 +234,9 @@ info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_
       d <- data[indices]
       return(mean(d))
     }
-    mean_wt <- mean(data[[survey_weight]])
-    boot_actual <- boot::boot(data[[outcome]] * data[[survey_weight]], meanfun, R=1000)
-    boot_informed <- boot::boot(informed_outcome * data[[survey_weight]], meanfun, R=1000)
+    mean_wt <- mean(survey_wt_vector)
+    boot_actual <- boot::boot(data[[outcome]] * survey_wt_vector, meanfun, R=1000)
+    boot_informed <- boot::boot(informed_outcome * survey_wt_vector, meanfun, R=1000)
     actual_lwr <- boot::boot.ci(boot_actual, conf = 0.95, type = "basic")$basic[4]/mean_wt
     actual_upr <- boot::boot.ci(boot_actual, conf = 0.95, type = "basic")$basic[5]/mean_wt
     informed_lwr <- boot::boot.ci(boot_informed, conf = 0.95, type = "basic")$basic[4]/mean_wt
