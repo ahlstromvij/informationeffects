@@ -9,7 +9,7 @@ info_effect(
   knowledge_var,
   covariates,
   prop_weight,
-  survey_weight,
+  survey_weight = 1,
   boot_ci = F,
   data
 )
@@ -21,11 +21,11 @@ info_effect(
 
 \item{covariates}{A concatenated character string of covariates.}
 
-\item{prop_weight}{A character string representing a vector containing propensity scores}
+\item{prop_weight}{A character string representing a vector containing propensity scores.}
 
-\item{survey_weight}{A character string representing a vector containing survey weights.}
+\item{survey_weight}{A character string representing a vector containing survey weights. Defaults to \code{1} if not supplied, which gives equal weight to each observation.}
 
-\item{boot_ci}{logical, designates whether to calculate bootstrapped confidence intervals.}
+\item{boot_ci}{Designates whether to calculate bootstrapped confidence intervals. Logical.}
 
 \item{data}{A data frame containing aforementioned variables.}
 }

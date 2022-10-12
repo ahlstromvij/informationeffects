@@ -164,9 +164,9 @@ info_prop_scores <- function(knowledge_var, covariates, data) {
 #' @param outcome A character string representing the outcome variable that you are looking to estimate an effect on.
 #' @param knowledge_var A character string representing a binary knowledge variable.
 #' @param covariates A concatenated character string of covariates.
-#' @param prop_weight A character string representing a vector containing propensity scores
-#' @param survey_weight A character string representing a vector containing survey weights.
-#' @param boot_ci logical, designates whether to calculate bootstrapped confidence intervals.
+#' @param prop_weight A character string representing a vector containing propensity scores.
+#' @param survey_weight A character string representing a vector containing survey weights. Defaults to \code{1} if not supplied, which gives equal weight to each observation.
+#' @param boot_ci Designates whether to calculate bootstrapped confidence intervals. Logical.
 #' @param data A data frame containing aforementioned variables.
 #' @return \code{info_effect} returns a list of the following:
 #'     \itemize{
