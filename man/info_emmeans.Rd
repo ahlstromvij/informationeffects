@@ -25,10 +25,13 @@ For a plausible knowledge scale, we would expect to see a positive relationship 
 income, and for men to know more than women.
 }
 \examples{
-# NOTE: This won't work without sample data
+knowledge <- rnorm(100,0,1)
+education <- sample(c("none","gcse","alevel","university"), replace=TRUE, size=100)
+income <- sample(c("Q1","Q2","Q3","Q4"), replace=TRUE, size=100)
+df <- data.frame(knowledge, education, income)
 info_emmeans(knowledge_var = "knowledge",
-            covariates = c("income", "education"),
-            data = df)
+             covariates = c("education","income"),
+             data = df)
 }
 \seealso{
 See \code{\link{info_scale}} for how to construct a knowledge scale.

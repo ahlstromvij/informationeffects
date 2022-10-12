@@ -9,7 +9,7 @@ info_scale(items, data, binary_cutoff = 0.9)
 \arguments{
 \item{items}{A concatenated character string of names of the knowledge items.}
 
-\item{data}{A data frame containing the knowledge items.}
+\item{data}{A data frame containing a set of binary knowledge items (\code{1} = true, \code{0} = false).}
 
 \item{binary_cutoff}{Percentile value for binary knowledge scale, with respondents
 at or above that value coded as \code{1} and otherwise as \code{0}. Set to 90th
@@ -40,7 +40,10 @@ Further diagnostics can be accessed through the \code{model} object returned by 
 information plot.
 }
 \examples{
-# NOTE: This won't work without data
-info_scale(items = c("k1","k2","k3","k4"),
-           data = df)
+item1 <- sample(c(0,1), replace=TRUE, size=100)
+item2 <- sample(c(0,1), replace=TRUE, size=100)
+item3 <- sample(c(0,1), replace=TRUE, size=100)
+df <- data.frame(item1, item2, item3)
+irt_model <- info_scale(items = c("item1", "item2","item3"),
+                        data = df)
 }

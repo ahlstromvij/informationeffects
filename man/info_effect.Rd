@@ -47,19 +47,21 @@ variable, propensity scores, and survey weights, while controlling for a set of 
 also generate bootstrapped confidence intervals.
 }
 \examples{
-# NOTE: This won't work without sample data
-info_effect(outcome = "immigration",
-    knowledge_var = "knowledge_binary",
-    covariates = c("age",
-                   "gender",
-                   "education",
-                   "income",
-                   "religion",
-                   "ethnicity"),
-    prop_weight = "prop_score",
-    survey_weight = "survey_wt",
-    data = df,
-    boot_ci = T)
+outcome_var <- sample(c(1,0), replace=TRUE, size=100)
+knowledge_binary <- sample(c(1,0), replace=TRUE, size=100)
+education <- sample(c("none","gcse","alevel","university"), replace=TRUE, size=100)
+income <- sample(c("Q1","Q2","Q3","Q4"), replace=TRUE, size=100)
+prop_scores <- abs(rnorm(100,0,1))
+survey_wt <- abs(rnorm(100,0,1))
+df <- data.frame(outcome_var, knowledge_binary, education, income, prop_scores, survey_wt)
+info_effect(outcome = "outcome_var",
+            knowledge_var = "knowledge_binary",
+            covariates = c("education",
+                           "income"),
+            prop_weight = "prop_scores",
+            survey_weight = "survey_wt",
+            data = df,
+            boot_ci = T)
 }
 \seealso{
 See \code{\link{info_scale}} for how to construct a knowledge scale, \code{\link{info_emmeans}} for evaluating construct

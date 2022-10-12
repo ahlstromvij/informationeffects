@@ -27,9 +27,12 @@ binary knowledge variable, as a function of a set of covariates. Call that proba
 the inverse of that probability, e.g., \code{1/p}, for anyone in the 'informed' category, and \code{1/(1-p)} otherwise.
 }
 \examples{
-# NOTE: This won't work without sample data
+knowledge_binary <- sample(c(1,0), replace=TRUE, size=100)
+education <- sample(c("none","gcse","alevel","university"), replace=TRUE, size=100)
+income <- sample(c("Q1","Q2","Q3","Q4"), replace=TRUE, size=100)
+df <- data.frame(knowledge_binary, education, income)
 info_prop_scores(knowledge_var = "knowledge_binary",
-                 covariates = c("age","gender","education","income"),
+                 covariates = c("education","income"),
                  data = df)
 }
 \seealso{

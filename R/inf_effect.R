@@ -5,7 +5,7 @@
 #' for IRT modeling.
 #'
 #' @param items A concatenated character string of names of the knowledge items.
-#' @param data A data frame containing the knowledge items.
+#' @param data A data frame containing a set of binary knowledge items (\code{1} = true, \code{0} = false).
 #' @param binary_cutoff Percentile value for binary knowledge scale, with respondents
 #'     at or above that value coded as \code{1} and otherwise as \code{0}. Set to 90th
 #'     percentile by default.
@@ -24,9 +24,13 @@
 #' @details Further diagnostics can be accessed through the \code{model} object returned by the function:
 #' \code{plot(model, type = "trace")} gives the trace plot and \code{plot(model, type = "info")} gives the
 #' information plot.
-#' @examples # NOTE: This won't work without data
-#' info_scale(items = c("k1","k2","k3","k4"),
-#'            data = df)
+#' @examples
+#' item1 <- sample(c(0,1), replace=TRUE, size=100)
+#' item2 <- sample(c(0,1), replace=TRUE, size=100)
+#' item3 <- sample(c(0,1), replace=TRUE, size=100)
+#' df <- data.frame(item1, item2, item3)
+#' irt_model <- info_scale(items = c("item1", "item2","item3"),
+#'                         data = df)
 info_scale <- function(items, data, binary_cutoff = 0.9) {
   # save all knowledge items to a data frame
   items_df <- data.frame(matrix(NA, nrow = dim(data)[1], ncol = length(items)))
@@ -84,10 +88,14 @@ info_scale <- function(items, data, binary_cutoff = 0.9) {
 #' @details For a plausible knowledge scale, we would expect to see a positive relationship between knowledge and education and
 #' income, and for men to know more than women.
 #' @seealso See \code{\link{info_scale}} for how to construct a knowledge scale.
-#' @examples # NOTE: This won't work without sample data
+#' @examples
+#' knowledge <- rnorm(100,0,1)
+#' education <- sample(c("none","gcse","alevel","university"), replace=TRUE, size=100)
+#' income <- sample(c("Q1","Q2","Q3","Q4"), replace=TRUE, size=100)
+#' df <- data.frame(knowledge, education, income)
 #' info_emmeans(knowledge_var = "knowledge",
-#'             covariates = c("income", "education"),
-#'             data = df)
+#'              covariates = c("education","income"),
+#'              data = df)
 info_emmeans <- function(knowledge_var, covariates, data) {
   # construct formula
   f <- as.formula(
@@ -122,9 +130,13 @@ info_emmeans <- function(knowledge_var, covariates, data) {
 #' binary knowledge variable, as a function of a set of covariates. Call that probability \code{p}. The scores are then calculated as
 #' the inverse of that probability, e.g., \code{1/p}, for anyone in the 'informed' category, and \code{1/(1-p)} otherwise.
 #' @seealso See \code{\link{info_scale}} for how to construct a knowledge scale.
-#' @examples # NOTE: This won't work without sample data
+#' @examples
+#' knowledge_binary <- sample(c(1,0), replace=TRUE, size=100)
+#' education <- sample(c("none","gcse","alevel","university"), replace=TRUE, size=100)
+#' income <- sample(c("Q1","Q2","Q3","Q4"), replace=TRUE, size=100)
+#' df <- data.frame(knowledge_binary, education, income)
 #' info_prop_scores(knowledge_var = "knowledge_binary",
-#'                  covariates = c("age","gender","education","income"),
+#'                  covariates = c("education","income"),
 #'                  data = df)
 info_prop_scores <- function(knowledge_var, covariates, data) {
   # construct formula
@@ -168,19 +180,22 @@ info_prop_scores <- function(knowledge_var, covariates, data) {
 #'    }
 #' @seealso See \code{\link{info_scale}} for how to construct a knowledge scale, \code{\link{info_emmeans}} for evaluating construct
 #' validity for such a scale, and \code{\link{info_prop_scores}} for calculating propensity scores.
-#' @examples # NOTE: This won't work without sample data
-#' info_effect(outcome = "immigration",
-#'     knowledge_var = "knowledge_binary",
-#'     covariates = c("age",
-#'                    "gender",
-#'                    "education",
-#'                    "income",
-#'                    "religion",
-#'                    "ethnicity"),
-#'     prop_weight = "prop_score",
-#'     survey_weight = "survey_wt",
-#'     data = df,
-#'     boot_ci = T)
+#' @examples
+#' outcome_var <- sample(c(1,0), replace=TRUE, size=100)
+#' knowledge_binary <- sample(c(1,0), replace=TRUE, size=100)
+#' education <- sample(c("none","gcse","alevel","university"), replace=TRUE, size=100)
+#' income <- sample(c("Q1","Q2","Q3","Q4"), replace=TRUE, size=100)
+#' prop_scores <- abs(rnorm(100,0,1))
+#' survey_wt <- abs(rnorm(100,0,1))
+#' df <- data.frame(outcome_var, knowledge_binary, education, income, prop_scores, survey_wt)
+#' info_effect(outcome = "outcome_var",
+#'             knowledge_var = "knowledge_binary",
+#'             covariates = c("education",
+#'                            "income"),
+#'             prop_weight = "prop_scores",
+#'             survey_weight = "survey_wt",
+#'             data = df,
+#'             boot_ci = T)
 info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_weight, boot_ci = F, data) {
   # construct formula
   f <- as.formula(
