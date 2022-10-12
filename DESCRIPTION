@@ -11,6 +11,8 @@ Description: A complete pipeline for calculating information effects.
     for counterfactual modeling; and calculating information effects in 
     survey data using propensity scores and survey weights.
 License: What license is it under?
+URL: https://github.com/ahlstromvij/informationeffects
+BugReports: https://github.com/ahlstromvij/informationeffects/issues
 Encoding: UTF-8
 LazyData: true
 Imports: 
