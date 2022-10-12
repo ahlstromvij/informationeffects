@@ -6,7 +6,7 @@ In politics like elsewhere, what we know matters for what we want. That’s why 
 
 The information effects literature makes clear that knowledge does matter for politics, and can in some cases even change the electoral outcome. For example: 
 
-- Ahlstrom-Vij (2020) models an informed EU referendum in the UK, and sees the proportion of remain swing from a minority to a majority. 
+- [Ahlstrom-Vij (2020)](https://www.cambridge.org/core/journals/episteme/article/abs/case-for-modelled-democracy/B57E0E9B282C8E16FC28664F939E8C80) models an informed EU referendum in the UK, and sees the proportion of remain swing from a minority to a majority. 
 - Blais et al. (2009) simulate the outcome of six past Canadian elections, involving three to four parties, with fully informed voters, and see a likely difference in outcome in one. 
 - Oscarsson (2007) simulates six past Swedish elections, involving eight main parties, and sees a likely difference in outcome in two of them.
 
@@ -16,8 +16,8 @@ Modeling of information effects involves a form of counterfactual or causal mode
 
 There is currently no well-established workflow for information effects research. The `informationeffects` package is looking to change that. It offers a complete pipeline for calculating information effects. It includes functions for the following:
 
-- `info_scale()` calculates a knowledge scale using Item Response Theory (IRT) modeling on the basis of a set of binary knowledge items.
-- `info_emmeans()` estimates marginal mean levels of knowledge using the emmeans package for different demographic variables in order to evaluate construct validity for the underlying knowledge scale.
+- `info_scale()` calculates a knowledge scale using Item Response Theory (IRT) modeling by way of the `mirt` package on the basis of a set of binary knowledge items.
+- `info_emmeans()` estimates marginal mean levels of knowledge using the `emmeans` package for different demographic variables in order to evaluate construct validity for the underlying knowledge scale.
 - `info_prop_scores()` calculates propensity scores to be used as weights in subsequent, counterfactual modeling, in order to improve balance. 
 - `info_effect()` calculates information effects on the basis of survey data with a binary knowledge variable, propensity scores, and survey weights, while controlling for a set of covariates. It can also generate bootstrapped confidence intervals.
 
