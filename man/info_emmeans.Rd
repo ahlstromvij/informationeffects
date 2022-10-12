@@ -7,11 +7,11 @@
 info_emmeans(knowledge_var, covariates, data)
 }
 \arguments{
+\item{knowledge_var}{A character string representing a knowledge variable.}
+
 \item{covariates}{A concatenated character string of covariates across which marginal means will be estimated.}
 
 \item{data}{A data frame containing aforementioned variables.}
-
-\item{knolwedge_var}{A character string representing a knowledge variable.}
 }
 \value{
 \code{info_emmeans} returns a list of marginal means for the covariates in question.

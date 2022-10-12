@@ -61,7 +61,7 @@ info_effect(outcome = "outcome_var",
             prop_weight = "prop_scores",
             survey_weight = "survey_wt",
             data = df,
-            boot_ci = T)
+            boot_ci = TRUE)
 }
 \seealso{
 See \code{\link{info_scale}} for how to construct a knowledge scale, \code{\link{info_emmeans}} for evaluating construct

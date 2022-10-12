@@ -81,7 +81,7 @@ info_scale <- function(items, data, binary_cutoff = 0.9) {
 #' \code{info_emmeans} estimates marginal mean levels of knowledge using the \code{emmeans} package for different demographic
 #' variables in order to evaluate construct validity for the underlying knowledge scale.
 #'
-#' @param knolwedge_var A character string representing a knowledge variable.
+#' @param knowledge_var A character string representing a knowledge variable.
 #' @param covariates A concatenated character string of covariates across which marginal means will be estimated.
 #' @param data A data frame containing aforementioned variables.
 #' @return \code{info_emmeans} returns a list of marginal means for the covariates in question.
@@ -146,9 +146,9 @@ info_prop_scores <- function(knowledge_var, covariates, data) {
           sep = " ~ "))
 
   # calculate propensity scores
-  p_scores <- glm(f,
-                  data = data,
-                  family = "binomial")
+  p_scores <- stats::glm(f,
+                         data = data,
+                         family = "binomial")
   data$ps_value <- predict(p_scores, type="response")
 
   # return propensity scores
@@ -195,7 +195,7 @@ info_prop_scores <- function(knowledge_var, covariates, data) {
 #'             prop_weight = "prop_scores",
 #'             survey_weight = "survey_wt",
 #'             data = df,
-#'             boot_ci = T)
+#'             boot_ci = TRUE)
 info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_weight = 1, boot_ci = F, data) {
   # construct formula
   f <- as.formula(
@@ -212,10 +212,10 @@ info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_
   }
 
   # fit model
-  m <- glm(f,
-           data = data,
-           family = "binomial",
-           weights = data[[prop_weight]])
+  m <- stats::glm(f,
+                  data = data,
+                  family = "binomial",
+                  weights = data[[prop_weight]])
 
   # update formula
   m$call <- call('glm', formula = formula(f), data = substitute(data))
@@ -229,7 +229,7 @@ info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_
   informed <- weighted.mean(informed_outcome, survey_wt_vector)
 
   # generate bootstrap confidence intervals
-  if (boot_ci == T) {
+  if (boot_ci == TRUE) {
     meanfun <- function(data, indices) {
       d <- data[indices]
       return(mean(d))

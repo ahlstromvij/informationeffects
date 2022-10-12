@@ -21,7 +21,8 @@ Imports:
     ggpubr,
     emmeans,
     cobalt,
-    gridExtra
+    gridExtra,
+    psych
 RoxygenNote: 7.2.1
 Suggests: 
     testthat (>= 3.0.0)
