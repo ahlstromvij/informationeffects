@@ -22,7 +22,9 @@ Imports:
     emmeans,
     cobalt,
     gridExtra,
-    psych
+    psych,
+    stats,
+    grDevices
 RoxygenNote: 7.2.1
 Suggests: 
     testthat (>= 3.0.0)

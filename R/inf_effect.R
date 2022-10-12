@@ -48,7 +48,7 @@ info_scale <- function(items, data, binary_cutoff = 0.9) {
   know_scores <- mirt::fscores(irt_mod)[,1]
 
   # create binary knowledge variable
-  knowledge_threshold <- quantile(know_scores, binary_cutoff)
+  knowledge_threshold <- stats::quantile(know_scores, binary_cutoff)
   know_scores_binary <- ifelse(know_scores >= knowledge_threshold, 1, 0)
   know_scores_binary_tbl <- prop.table(table("Proportion of observations in each category:" = know_scores_binary))
 
@@ -66,13 +66,13 @@ info_scale <- function(items, data, binary_cutoff = 0.9) {
   psych::fa.parallel(items_df, fa="fa")
 
   return(list("model" = irt_mod,
-              "model_coef" = mirt::coef(irt_mod, IRTpars=T),
+              "model_coef" = mirt::coef(irt_mod, IRTpars=TRUE),
               "model_summary" = summary(irt_mod),
               "know_scores" = know_scores,
               "know_scores_binary" = know_scores_binary,
               "know_scores_binary_tbl" = know_scores_binary_tbl,
               "empirical_plots" = empirical_plots,
-              "par_analysis" = recordPlot(),
+              "par_analysis" = grDevices::recordPlot(),
               "q3" = data.frame(mirt::residuals(irt_mod, type="Q3"))))
 }
 
@@ -98,13 +98,13 @@ info_scale <- function(items, data, binary_cutoff = 0.9) {
 #'              data = df)
 info_emmeans <- function(knowledge_var, covariates, data) {
   # construct formula
-  f <- as.formula(
+  f <- stats::as.formula(
     paste(knowledge_var,
           paste(covariates, collapse = " + "),
           sep = " ~ "))
 
   # fit model
-  m <- lm(f,
+  m <- stats::lm(f,
           data = data)
 
   # create list of emmeans by each covariate
@@ -140,7 +140,7 @@ info_emmeans <- function(knowledge_var, covariates, data) {
 #'                  data = df)
 info_prop_scores <- function(knowledge_var, covariates, data) {
   # construct formula
-  f <- as.formula(
+  f <- stats::as.formula(
     paste(knowledge_var,
           paste(covariates, collapse = " + "),
           sep = " ~ "))
@@ -149,7 +149,7 @@ info_prop_scores <- function(knowledge_var, covariates, data) {
   p_scores <- stats::glm(f,
                          data = data,
                          family = "binomial")
-  data$ps_value <- predict(p_scores, type="response")
+  data$ps_value <- stats::predict(p_scores, type="response")
 
   # return propensity scores
   return(ifelse(data[[knowledge_var]] == 1, 1/data$ps_value, 1/(1-data$ps_value)))
@@ -198,7 +198,7 @@ info_prop_scores <- function(knowledge_var, covariates, data) {
 #'             boot_ci = TRUE)
 info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_weight = 1, boot_ci = F, data) {
   # construct formula
-  f <- as.formula(
+  f <- stats::as.formula(
     paste(outcome,
           paste(knowledge_var,
                 paste(covariates, collapse = " + "), sep = " + "),
@@ -218,15 +218,15 @@ info_effect <- function(outcome, knowledge_var, covariates, prop_weight, survey_
                   weights = data[[prop_weight]])
 
   # update formula
-  m$call <- call('glm', formula = formula(f), data = substitute(data))
+  m$call <- call('glm', formula = stats::formula(f), data = substitute(data))
 
   # make everyone in the data set informed
   data[[knowledge_var]] <- 1
 
   # calculate actual and informed support
-  actual <- weighted.mean(data[[outcome]], survey_wt_vector)
-  informed_outcome <- predict(m, newdata = data, type = "response")
-  informed <- weighted.mean(informed_outcome, survey_wt_vector)
+  actual <- stats::weighted.mean(data[[outcome]], survey_wt_vector)
+  informed_outcome <- stats::predict(m, newdata = data, type = "response")
+  informed <- stats::weighted.mean(informed_outcome, survey_wt_vector)
 
   # generate bootstrap confidence intervals
   if (boot_ci == TRUE) {
