@@ -156,6 +156,42 @@ info_prop_scores <- function(knowledge_var, covariates, data) {
   return(ifelse(data[[knowledge_var]] == 1, 1/data$ps_value, 1/(1-data$ps_value)))
 }
 
+#' Evaluate propensity scores using balance plots.
+#'
+#' \code{info_prop_scores} calculates propensity scores to be used as weights in subsequent, counterfactual modeling,
+#' in order to improve balance. The function uses logistic regression to calculate the scores. It is recommended that
+#' the calculated scores are independently evaluated by way of balane plots, here implemented in \code{info_bal_plots}.
+#'
+#' @param knowledge_var A character string representing a binary knowledge variable.
+#' @param covariates A concatenated character string of covariates that can be expected to have an effect on knowledge.
+#' @param prop_scores A character string representing a vector of propensity scores.
+#' @param data A data frame containing aforementioned variables.
+#' @return \code{info_bal_plots} returns a list of balance plots.
+#' @details The function uses \link[cobalt]{bal.plot} to generate balance plots.
+#' @seealso See \code{\link{info_scale}} for how to construct a knowledge scale, and \code{\link{info_prop_scores}} for
+#' how to generate propensity scores.
+#' @examples
+#' knowledge_binary <- sample(c(1,0), replace=TRUE, size=100)
+#' education <- sample(c("none","gcse","alevel","university"), replace=TRUE, size=100)
+#' income <- sample(c("Q1","Q2","Q3","Q4"), replace=TRUE, size=100)
+#' prop_scores <- abs(rnorm(100,0,1))
+#' df <- data.frame(knowledge_binary, education, income, prop_scores)
+#' info_bal_plots(knowledge_var = "knowledge_binary",
+#'                covariates = c("income", "education"),
+#'                prop_score ="prop_score",
+#'                data = df)
+info_bal_plots <- function(knowledge_var, covariates, prop_score, data) {
+  covs_general <- subset(data, select = covariates)
+  plot_list <- vector('list', length(covariates))
+  for (i in seq_along(covariates)) {
+    plot_list[[i]] <- local({
+      i <- i
+      print(cobalt::bal.plot(covs_general, treat = data[[knowledge_var]], estimand = "ATE", weights = data[[prop_score]], method = "weighting", var.name = covariates[i], which = "both"))
+    })
+  }
+  return(plot_list)
+}
+
 #' Calculate information effects.
 #'
 #' \code{info_effect} calculates information effects on the basis of survey data with a binary knowledge

@@ -21,6 +21,7 @@ There is currently no well-established workflow for information effects research
 - `info_scale()` calculates a knowledge scale using Item Response Theory (IRT) modeling by way of the `mirt` package on the basis of a set of binary knowledge items.
 - `info_emmeans()` estimates marginal mean levels of knowledge using the `emmeans` package for different demographic variables in order to evaluate construct validity for the underlying knowledge scale.
 - `info_prop_scores()` calculates propensity scores to be used as weights in subsequent, counterfactual modeling, in order to improve balance. 
+- `info_bal_plots()` evaluates propensity scores using balance plots. 
 - `info_effect()` calculates information effects on the basis of survey data with a binary knowledge variable, propensity scores, and survey weights, while controlling for a set of covariates. It can also generate bootstrapped confidence intervals.
 
 ## Installation
