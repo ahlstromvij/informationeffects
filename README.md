@@ -10,6 +10,8 @@ The information effects literature makes clear that knowledge can in some cases 
 - [Blais et al. (2009)](https://ejpr.onlinelibrary.wiley.com/doi/abs/10.1111/j.1475-6765.2008.00835.x) simulate the outcome of six past Canadian elections, involving three to four parties, with fully informed voters, and see a likely difference in outcome in one. 
 - [Oscarsson (2007)](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9477.2007.00182.x) simulates six past Swedish elections, involving eight main parties, and sees a likely difference in outcome in two of them.
 
+## How it works
+
 Modeling of information effects involves a form of counterfactual or causal modeling ([Morgan and Winship 2015](https://www.cambridge.org/core/books/counterfactuals-and-causal-inference/5CC81E6DF63C5E5A8B88F79D45E1D1B7)): a model is fitted, not to make a straightforward prediction (as in predictive modeling), but to estimate how a respondent would have responded, had they been more informed, with reference to some relevant measure of political knowledge (e.g., [Delli Carpini and Keeter 1996](https://yalebooks.yale.edu/book/9780300072754/what-americans-know-about-politics-and-why-it-matters/)). Such an estimation is performed by fitting the model on the relevant data, and then using the model to make a "prediction," once the value on the political knowledge variable for each respondent has been set to whatever value designates being “informed,” thereby estimating what each respondent would have responded, had they been fully informed.
 
 ## A complete pipeline for calculating information effects
