@@ -2,7 +2,7 @@
 
 ## Background
 
-In politics like elsewhere, what we know matters for what we want. That’s why political scientists, rightly, are concerned with studying what voters know, and what difference it would make had they known more. Some of this work is experimental. However, for no other reason than resource constraint, a lot of political scientific work on political knowledge uses observational data, generally investigating so-called _information effects_, i.e., differences between actual (reported) preferences, and the preferences people likely would have reported, had they been more politically informed.
+In politics like elsewhere, what we know matters for what we want. That’s why political scientists, rightly, are concerned with studying what voters know, and what difference it would make had they known more. Some of this work is experimental. However, if for no other reason than resource constraints, a lot of political scientific work on political knowledge uses observational data, generally investigating so-called _information effects_ ([Althaus 2003](https://www.cambridge.org/core/books/collective-preferences-in-democratic-politics/C12E833FF34C53E5DCC560C65691F1F3)), i.e., differences between actual (reported) preferences, and the preferences people likely would have reported, had they been more politically informed.
 
 The information effects literature makes clear that knowledge can in some cases make a substantial difference, and even change the electoral outcome. Examples include: 
 
