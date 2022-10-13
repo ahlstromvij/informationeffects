@@ -38,6 +38,22 @@ test_that("Propensity scores are calculated correctly", {
   expect_equal(prop_scores[1], 2.397574, tolerance = 1e-5)
 })
 
+test_that("Balance plots are generated", {
+  set.seed(1)
+  knowledge_binary <- sample(c(1,0), replace=TRUE, size=100)
+  education <- sample(c("none","gcse","alevel","university"), replace=TRUE, size=100)
+  income <- sample(c("Q1","Q2","Q3","Q4"), replace=TRUE, size=100)
+  prop_scores <- abs(rnorm(100,0,1))
+  df <- data.frame(knowledge_binary, education, income, prop_scores)
+  bal_plots <- info_bal_plots(knowledge_var = "knowledge_binary",
+                              covariates = c("income", "education"),
+                              prop_score ="prop_scores",
+                              data = df)
+  expect_equal(class(bal_plots), "list")
+  expect_equal(class(bal_plots[[1]]), c("gg","ggplot"))
+  expect_equal(class(bal_plots[[2]]), c("gg","ggplot"))
+})
+
 test_that("Information effects are calculated correctly with CIs and survey weights", {
   set.seed(1)
   outcome_var <- sample(c(1,0), replace=TRUE, size=100)
