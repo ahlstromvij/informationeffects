@@ -8,7 +8,7 @@ Description: A complete pipeline for calculating information effects.
     It includes functions for constructing a knowledge scale from a set
     of knowledge items using IRT modeling; evaluating construct validity
     using estimated marginal means; calculating propensity scores
-    for counterfactual modeling; evaluatinng propensity scoes using balance
+    for counterfactual modeling; evaluating propensity scores using balance
     plots; and calculating information effects in survey data using 
     propensity scores and survey weights.
 License: MIT + file LICENSE
