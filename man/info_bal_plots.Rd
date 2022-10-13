@@ -11,9 +11,9 @@ info_bal_plots(knowledge_var, covariates, prop_score, data)
 
 \item{covariates}{A concatenated character string of covariates that can be expected to have an effect on knowledge.}
 
-\item{data}{A data frame containing aforementioned variables.}
+\item{prop_score}{A character string representing a vector of propensity scores.}
 
-\item{prop_scores}{A character string representing a vector of propensity scores.}
+\item{data}{A data frame containing aforementioned variables.}
 }
 \value{
 \code{info_bal_plots} returns a list of balance plots.
@@ -34,7 +34,7 @@ prop_scores <- abs(rnorm(100,0,1))
 df <- data.frame(knowledge_binary, education, income, prop_scores)
 info_bal_plots(knowledge_var = "knowledge_binary",
                covariates = c("income", "education"),
-               prop_score ="prop_score",
+               prop_score ="prop_scores",
                data = df)
 }
 \seealso{

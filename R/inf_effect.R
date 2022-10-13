@@ -164,7 +164,7 @@ info_prop_scores <- function(knowledge_var, covariates, data) {
 #'
 #' @param knowledge_var A character string representing a binary knowledge variable.
 #' @param covariates A concatenated character string of covariates that can be expected to have an effect on knowledge.
-#' @param prop_scores A character string representing a vector of propensity scores.
+#' @param prop_score A character string representing a vector of propensity scores.
 #' @param data A data frame containing aforementioned variables.
 #' @return \code{info_bal_plots} returns a list of balance plots.
 #' @details The function uses \link[cobalt]{bal.plot} to generate balance plots.
@@ -178,7 +178,7 @@ info_prop_scores <- function(knowledge_var, covariates, data) {
 #' df <- data.frame(knowledge_binary, education, income, prop_scores)
 #' info_bal_plots(knowledge_var = "knowledge_binary",
 #'                covariates = c("income", "education"),
-#'                prop_score ="prop_score",
+#'                prop_score ="prop_scores",
 #'                data = df)
 info_bal_plots <- function(knowledge_var, covariates, prop_score, data) {
   covs_general <- subset(data, select = covariates)
