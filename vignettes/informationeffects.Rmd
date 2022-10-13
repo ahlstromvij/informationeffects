@@ -87,11 +87,17 @@ Information effects modeling can also be used to look at the influence of knowle
 
 Whether explicitly framed in those terms, modeling of information effects involves a form of counterfactual or causal modeling [@morganwinship2015]: a model is fitted, not for purposes of making a straightforward prediction (as in predictive modeling), e.g., concerning how some particular respondent might respond, but in order to estimate how a respondent would have responded, had they been more informed, with reference to some relevant measure of political knowledge [@carpinikeeter1996]. Such an estimation is performed by fitting the model on the relevant data, and then using the model to make a "prediction," once the value on the political knowledge variable for each respondent has been set to whatever value designates being "informed," thereby estimating what each respondent would have responded, had they been fully informed.
 
-## Example data: Immigration attitudes in British Election Studies
+## The `informationeffects` package
 
-How does this work in practice? That's the question this guide is looking to answer. It will walk through each step in a complete pipeline from the constructing a political knowledge scale from a set of items to modeling the relevant effects, using functions written in R [@r_core_team] -- a free, open source language for statistical computing -- that can be re-used by others interested in information effects modeling on their own particular data sets.
+How does this work in practice? That's the question this vignette is looking to answer. It will walk through each step in a complete pipeline from the constructing a political knowledge scale from a set of items to modeling the relevant effects, using the `informationeffects` package. The package contains five functions, each of which will be demonstrated below:
 
-The functions and their outputs will be illustrated by way of subset of Wave 17 of the British Election Study Internet Panel [@bes-17] (N = 34,366). As our outcome, we will use the following attitudinal variable (`immigSelf`): "On a scale from 0-10, how would you prefer immigration levels to Britain changed?" (0 = reduced a lot, 5 = kept the same, 10 = increased a lot). For purposes of modeling, this variable has been re-coded as a binary one, with 1 for responses below 5, and 0 otherwise:
+- `info_scale()` calculates a knowledge scale using Item Response Theory (IRT) modeling by way of the `mirt` package on the basis of a set of binary knowledge items.
+- `info_emmeans()` estimates marginal mean levels of knowledge using the `emmeans` package for different demographic variables in order to evaluate construct validity for the underlying knowledge scale.
+- `info_prop_scores()` calculates propensity scores to be used as weights in subsequent, counterfactual modeling, in order to improve balance. 
+- `info_bal_plots()` evaluates propensity scores using balance plots. 
+- `info_effect()` calculates information effects on the basis of survey data with a binary knowledge variable, propensity scores, and survey weights, while controlling for a set of covariates. It can also generate bootstrapped confidence intervals.
+
+The package's functionality will be illustrated by way of subset of Wave 17 of the British Election Study Internet Panel [@bes-17] (N = 34,366). As our outcome, we will use the following attitudinal variable (`immigSelf`): "On a scale from 0-10, how would you prefer immigration levels to Britain changed?" (0 = reduced a lot, 5 = kept the same, 10 = increased a lot). For purposes of modeling, this variable has been re-coded as a binary one, with 1 for responses below 5, and 0 otherwise:
 
 ```{r immigself}
 df %>% 
@@ -122,7 +128,7 @@ df %>%
 
 Finally, we will also use the survey weight variable (renamed `survey_wt` in the subset we will be using) included with the data set, in order to have our results be representative of the UK population.
 
-## Constructing a knowledge scale with `info_scale()`
+## `info_scale()`: Construct a knowledge scale 
 
 The first thing we need in order to model information effects is, naturally enough, some measure of participant's level of political knowledge. Following the work of Michael Delli Carpini and Scott Keeter [@carpinikeeter1993; @carpinikeeter1996], this typically takes the form of a number of TRUE / FALSE items, where "Don't know" responses, as already noted, are generally coded as FALSE, i.e., as respondents not knowing the relevant answer [@zaller1992: 339; @althaus2003: 105]. 
 
@@ -214,7 +220,7 @@ know_scale$empirical_plots
 
 The empirical plots for all items suggest an acceptable fit, with some possible reservations about item 1.
 
-## Evaluating construct validity with `info_emmeans()`
+## `info_emmeans()`: Evaluate construct validity 
 
 By performing the type of diagnostics covered in the previous section on our knowledge scale, we can get a good sense of whether the model performs well from a formal perspective, i.e., in regards to unidimensionality, local independence, and model fit. However, we also would like to be able to validate that the score plausibly is measuring a form of political knowledge specifically.
 
@@ -231,7 +237,7 @@ info_emmeans(knowledge_var = "knowledge",
 
 We can see that the scale value increases in an (almost exclusively) monotonic fashion for education, income, and age, which is what we should expect if our scale measures political knowledge. We also see that the mean level of knowledge is greater for men than for women. This all offers some evidence for construct validity. 
 
-## Calculating propensity scores with `info_prop_scores()`
+## `info_prop_scores()`: Calculate propensity scores 
 
 As noted earlier, information modeling is a type of counterfactual modeling, estimating the causal effect that we would have seen, had we been able to intervene on (i.e., increase) the knowledge variable. Best practice in counterfactual modeling is to rely on so-called doubly-robust estimation, which looks to approximate the situation we would have found ourselves in, had our data been the result of a randomized experimental design with a single treatment [@morganwinship2015]. The ‘double robustness’ owes to how effects are estimated in a context where we have both controlled for assumed confounds (as in standard regression), and taken steps to make up for the fact that the data have not come about as a result of randomized assignment. In the present case, this second layer of ‘robustness’ is achieved by using so-called ‘propensity scores’ as weights in the subsequent models.
 
@@ -278,7 +284,7 @@ df %>%
 
 What we want to see in this distribution is a clustering of propensity scores towards the low end, and not too many extreme scores. That said, extreme scores should not automatically be assumed to be incorrect [@levyetal2008], although one should be mindful that they of course have a disproportionate influence when subsequently using them as weights in our regression model (more on this below). When properly estimated, however, such weighting will counteract any correlations between demographics and levels of political knowledge. Specifically, since propensity scores measure the probability of ending up in the ‘treatment’ category, given a set of covariates -- in our case, the probability that you would be ‘informed’, given your age, income, level of education and gender -- we can use the inverse of those scores as weights (such that an observation with a low propensity is weighted heavily) in fitting the model. Given an appropriately chosen set of covariates when calculating the scores, this recreates a situation that would have been expected in a randomized experiment, thereby allowing greater confidence in any counterfactual inference.
 
-## Evaluating propensity scores using `info_bal_plots()`
+## `info_bal_plots()`: Evaluate propensity scores 
 
 Since the whole point of propensity scores is to balance the sample, we want to inspect whether we have been successful on that score using balance plots by way of `info_bal_plots`, in turn relying on the `cobalt` package [@greifer2022].
 
@@ -291,7 +297,7 @@ bal_plots <- info_bal_plots(knowledge_var = "knowledge_binary",
 
 We see there that, in each case, balance has been improved by the propensity scores (the right pane in each of the graphs). Had that not been the case, we might have wanted to revisit the cut-off for being 'informed' (currently, 90th percentile or above), in case the balance between the two groups is so lopsided that it's difficult to balance them using propensity scores.
 
-## Drawing up a DAG using `ggdag`
+## `info_effect()`: Calculate information effects
 
 We now need to specify our model -- or models, in case we want to use several specifications. Since care needs to be taken when specifying and interpreting causal models, the first thing to do is to justify one's choices regarding what variables are to be included and excluded. By transparently presenting the rationale for model specifications, and visualizing this as a directed acyclic graph (DAG), we adhere to good practice for political scientists who use observational data to address causal questions [@keeleetal2020].
 
@@ -332,8 +338,6 @@ pt_dag <- ggdag::dagify(Y ~ Know. + Gend. + Edu. + Inc. + Ethn. + Rel. + Age + P
 
 ggdag::ggdag(pt_dag, stylized = TRUE, node_size = 20)
 ```
-
-## Calculating information effects with `info_effect()`
 
 We now have everything we need to actually calculate information effects, i.e., differences in proportions between actual and estimated informed levels of support for some particular statement, policy, or the like. In light of the discussion above about different model specifications, and questions about the exact causal role of partisanship and any identities tied up with the UK's 2016 EU referendum vote, we fit and display the results for three models, in the interest of robustness: one purely demographic, one that also controls for partisanship, and one that additionally controls for the respondent's EU referendum vote.
 
@@ -423,6 +427,6 @@ There is no established way to compute confidence intervals for the type of aggr
 
 ## Conclusion
 
-We started out by noting that information matters for politics, and that one of the main ways of determining the difference that knowledge will make in any given instance is by modeling information effects. The `informationeffects`  offers a complete pipeline for calculating such effects. If anyone spots any bugs or issues, please log them on the GitHub repo [here](https://github.com/ahlstromvij/informationeffects/issues).
+We started out by noting that information matters for politics, and that one of the main ways of determining the difference that knowledge will make in any given instance is by modeling information effects. The `informationeffects`  offers a complete pipeline for calculating such effects. If you spot any bugs or issues, please log them on the GitHub repo [here](https://github.com/ahlstromvij/informationeffects/issues).
 
 ## References
