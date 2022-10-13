@@ -1,4 +1,4 @@
-# informationeffects
+# informationeffects: An R package for modeling information effects
 
 ## Background
 
