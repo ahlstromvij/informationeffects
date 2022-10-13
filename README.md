@@ -34,3 +34,7 @@ devtools::install_github("ahlstromvij/informationeffects")
 ```
 
 Please report any bugs or issues [here](https://github.com/ahlstromvij/informationeffects/issues).
+
+## Package vignette
+
+For a tutorial on how to use the package, please consult the full vignette for the package that is available [here](https://rpubs.com/ahlstromvij/955755).
