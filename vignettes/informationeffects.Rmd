@@ -1,7 +1,9 @@
 ---
 title: "Modeling information effects in R with the informationeffects package"
 author: Kristoffer Ahlstrom-Vij
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette:
+    toc: true
 bibliography: refs.bib
 vignette: >
   %\VignetteIndexEntry{Modeling information effects in R with the informationeffects package}
@@ -120,7 +122,7 @@ df %>%
 
 Finally, we will also use the survey weight variable (renamed `survey_wt` in the subset we will be using) included with the data set, in order to have our results be representative of the UK population.
 
-## Constructing a knowledge scale iwth `info_scale()`
+## Constructing a knowledge scale with `info_scale()`
 
 The first thing we need in order to model information effects is, naturally enough, some measure of participant's level of political knowledge. Following the work of Michael Delli Carpini and Scott Keeter [@carpinikeeter1993; @carpinikeeter1996], this typically takes the form of a number of TRUE / FALSE items, where "Don't know" responses, as already noted, are generally coded as FALSE, i.e., as respondents not knowing the relevant answer [@zaller1992: 339; @althaus2003: 105]. 
 
@@ -130,10 +132,17 @@ A better way to construct the relevant scale is therefore to use Item Response T
 
 The latent traits modeled by way of IRT are assumed to fall on a continuous scale. Values on that scale are usually referred to by way of the Greek letter $\theta$ (theta), and taken to range from -$\infty$ to +$\infty$, with a mean of 0 and standard deviation of 1. This means that, while the individual $\theta$ values ascribed to any particular respondent has no intrinsic meaning, it can nevertheless be interpreted relative to an estimated population mean.
 
-To construct a knowledge scale using informationeffects, we do the following:
+To construct a knowledge scale using `informationeffects`, we first attach the package (assuming we have already installed it):
+
+```{r install, message=FALSE, results='hide', fig.show='hide'}
+# install.packages("devtools")
+# devtools::install_github("ahlstromvij/informationeffects")
+library(informationeffects)
+```
+
+Then we can build the scale using `know_scale``
 
 ```{r know_scale_1, message=FALSE, results='hide', fig.show='hide'}
-library(informationeffects)
 know_scale <- info_scale(items = c("k1","k2","k3","k4"),
                          data = df)
 ```
@@ -324,52 +333,52 @@ pt_dag <- ggdag::dagify(Y ~ Know. + Gend. + Edu. + Inc. + Ethn. + Rel. + Age + P
 ggdag::ggdag(pt_dag, stylized = TRUE, node_size = 20)
 ```
 
-## Calculating information effects
+## Calculating information effects with `info_effect()`
 
 We now have everything we need to actually calculate information effects, i.e., differences in proportions between actual and estimated informed levels of support for some particular statement, policy, or the like. In light of the discussion above about different model specifications, and questions about the exact causal role of partisanship and any identities tied up with the UK's 2016 EU referendum vote, we fit and display the results for three models, in the interest of robustness: one purely demographic, one that also controls for partisanship, and one that additionally controls for the respondent's EU referendum vote.
 
 ```{r inf_effect_1, message=FALSE, results='hide', warning=FALSE}
 inf1 <- info_effect(outcome = "immig_self", 
-                  knowledge_var = "knowledge_binary", 
-                  covariates = c("age",
-                                 "gender",
-                                 "education",
-                                 "income",
-                                 "religion",
-                                 "ethnicity"), 
-                  prop_weight = "prop_score",
-                  survey_weight = "survey_wt",
-                  data = df,
-                  boot_ci = TRUE)
+                    knowledge_var = "knowledge_binary", 
+                    covariates = c("age",
+                                   "gender",
+                                   "education",
+                                   "income",
+                                   "religion",
+                                   "ethnicity"), 
+                    prop_weight = "prop_score",
+                    survey_weight = "survey_wt",
+                    data = df,
+                    boot_ci = TRUE)
 
 inf2 <- info_effect(outcome = "immig_self", 
-                  knowledge_var = "knowledge_binary", 
-                  covariates = c("age",
-                                 "gender",
-                                 "education",
-                                 "income",
-                                 "religion",
-                                 "ethnicity",
-                                 "party_id"), 
-                  prop_weight = "prop_score",
-                  survey_weight = "survey_wt",
-                  data = df,
-                  boot_ci = TRUE)
+                    knowledge_var = "knowledge_binary", 
+                    covariates = c("age",
+                                   "gender",
+                                   "education",
+                                   "income",
+                                   "religion",
+                                   "ethnicity",
+                                   "party_id"), 
+                    prop_weight = "prop_score",
+                    survey_weight = "survey_wt",
+                    data = df,
+                    boot_ci = TRUE)
 
 inf3 <- info_effect(outcome = "immig_self", 
-                  knowledge_var = "knowledge_binary", 
-                  covariates = c("age",
-                                 "gender",
-                                 "education",
-                                 "income",
-                                 "religion",
-                                 "ethnicity",
-                                 "party_id",
-                                 "eu_ref_vote"), 
-                  prop_weight = "prop_score",
-                  survey_weight = "survey_wt",
-                  data = df,
-                  boot_ci = TRUE)
+                    knowledge_var = "knowledge_binary", 
+                    covariates = c("age",
+                                   "gender",
+                                   "education",
+                                   "income",
+                                   "religion",
+                                   "ethnicity",
+                                   "party_id",
+                                   "eu_ref_vote"), 
+                    prop_weight = "prop_score",
+                    survey_weight = "survey_wt",
+                    data = df,
+                    boot_ci = TRUE)
 ```
 
 Each model estimates actual and informed support for the idea that levels of immigration coming into the UK should be reduced, in order to estimate what difference level of political knowledge makes on this issue. For both actual and informed support, we apply the survey weights included in the data set to approximate representativeness. Let's plot the results:
@@ -382,8 +391,10 @@ plot_df <- tibble::tibble(
   upr = c(inf1$actual_upr, inf1$informed_upr, inf2$informed_upr, inf3$informed_upr)
 )
 
-plot_df <- within(plot_df, scenario <- factor(scenario,
-                                                levels=c("Actual", "Informed (EU vote)", "Informed (partisanship)", "Informed (demographic)")))
+plot_df <- within(plot_df, scenario <- factor(scenario, levels=c("Actual", 
+                                                                 "Informed (EU vote)", 
+                                                                 "Informed (partisanship)", 
+                                                                 "Informed (demographic)")))
 
 theme_set(ggplot2::theme_minimal())
 ggplot2::ggplot(plot_df) +
@@ -404,11 +415,14 @@ ggplot2::ggplot(plot_df) +
   annotate("text", x = 2, y = plot_df$support[4]+0.025, label = paste(round(plot_df$support[4] * 100, 2),"%", sep="")) +
   annotate("text", x = 3, y = plot_df$support[3]+0.025, label = paste(round(plot_df$support[3] * 100, 2),"%", sep="")) +
   annotate("text", x = 4, y = plot_df$support[2]+0.025, label = paste(round(plot_df$support[2] * 100, 2),"%", sep=""))
-
 ```
 
 The function returns the formula, the model, as well as the actual and estimated informed proportions (in each case weighted using the survey weights), as well as the difference between the two, i.e., the information effect. We see that, if people in the UK were all to become informed, in the respect operationalised here, the idea that immigration levels should be reduced would likely go from a majority to a minority position (with the dashed line signifying 50%), irrespective of the particular modeling assumptions made, suggesting some robustness of the results. The size of the effect -- close to 10 percentage points for the demographic model -- is noteworthy, especially in the context of the low bar set by the knowledge scale, suggesting that even a low level of political knowledge makes a difference.
 
 There is no established way to compute confidence intervals for the type of aggregate, counterfactual estimates reported here. For purposes of giving a sense of the variability of the individual estimates, bootstrapped confidence intervals are therefore returned, constructed as follows: 1,000 bootstrap samples are drawn from the (weighted) predictions, as well as from the weighted responses in the data set. Using R’s `boot` package [@davisonhinkley1997], basic 95% confidence intervals are then computed for the mean weighted prediction, the upper and lower bounds of which are then divided in each case by the mean weight in the total sample.
+
+## Conclusion
+
+We started out by noting that information matters for politics, and that one of the main ways of determining the difference that knowledge will make in any given instance is by modeling information effects. The `informationeffects`  offers a complete pipeline for calculating such effects. If anyone spots any bugs or issues, please log them on the GitHub repo [here](https://github.com/ahlstromvij/informationeffects/issues).
 
 ## References
