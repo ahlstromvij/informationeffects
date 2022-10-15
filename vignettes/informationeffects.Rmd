@@ -171,7 +171,7 @@ This binary variable will be used later on when calculating so-called propensity
 know_scale$know_scores_binary_tbl
 ```
 
-As we can see, about 45% of the sample ends up in the "informed" category, which suggests two things: first, it likely won't be too difficult to balance the data set with propensity scores, since 'informed' respondents are not in a small minority; and, second, the items in the scale are fairly easy. The latter fact in particular should be kept in mind when eventually interpreting any information effect.
+As we can see, about 46% of the sample ends up in the "informed" category, which suggests two things: first, it likely won't be too difficult to balance the data set with propensity scores, since 'informed' respondents are not in a small minority; and, second, the items in the scale are fairly easy. The latter fact in particular should be kept in mind when eventually interpreting any information effect.
 
 `info_scale` also returns the IRT model itself as `model`, alongside a `model_summary`, providing the factor loadings (`F1`), and model coefficients (`model_coef`), with `a` corresponding to the discrimination parameter, and `b` to the difficulty parameter:
 
