@@ -19,7 +19,7 @@
 #'       \item \code{know_scores} A vector of knowledge scores
 #'       \item \code{know_scores_binary} A vector of binary knowledge scores
 #'       \item \code{know_scores_binary_tbl} A table with the proportions on the binary knowledge variable
-#'       \item \code{par_analysis} The plot for a paralell analysis of the knowledge items, to evaluate dimensionality.
+#'       \item \code{par_analysis} The plot for a parallel analysis of the knowledge items, to evaluate dimensionality.
 #'       \item \code{q3} The Q3 values for the IRT model, to investigate local independence
 #'       \item \code{empirical_plots} Empirical plots for the IRT model, to evaluate model fit
 #'    }
